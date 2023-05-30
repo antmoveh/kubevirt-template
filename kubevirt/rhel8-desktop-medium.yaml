@@ -1,0 +1,91 @@
+apiVersion: v1
+items:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.resources.requests.memory",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1610612736
+          }
+        ]
+    labels:
+      app: rhel8-6wlocollq3gqcy46
+      vm.kubevirt.io/template: rhel8-desktop-medium
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: devel
+    name: rhel8-6wlocollq3gqcy46
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: rhel8-6wlocollq3gqcy46
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel8
+          namespace: kubevirt-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    running: false
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: medium
+          vm.kubevirt.io/os: rhel8
+          vm.kubevirt.io/workload: desktop
+        labels:
+          kubevirt.io/domain: rhel8-6wlocollq3gqcy46
+          kubevirt.io/size: medium
+      spec:
+        domain:
+          cpu:
+            cores: 1
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            inputs:
+            - bus: virtio
+              name: tablet
+              type: tablet
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            networkInterfaceMultiqueue: true
+            rng: {}
+          resources:
+            requests:
+              memory: 4Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: rhel8-6wlocollq3gqcy46
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: cloud-user
+              password: x3w1-7hj2-n50x
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+kind: List
+metadata: {}

@@ -1,0 +1,91 @@
+apiVersion: v1
+items:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.resources.requests.memory",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1610612736
+          }
+        ]
+    labels:
+      app: rhel8-h61x7veung45orba
+      vm.kubevirt.io/template: rhel8-highperformance-small
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: devel
+    name: rhel8-h61x7veung45orba
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: rhel8-h61x7veung45orba
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel8
+          namespace: kubevirt-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    running: false
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: small
+          vm.kubevirt.io/os: rhel8
+          vm.kubevirt.io/workload: highperformance
+        labels:
+          kubevirt.io/domain: rhel8-h61x7veung45orba
+          kubevirt.io/size: small
+      spec:
+        domain:
+          cpu:
+            cores: 1
+            dedicatedCpuPlacement: true
+            isolateEmulatorThread: true
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - dedicatedIOThread: true
+              disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            networkInterfaceMultiqueue: true
+            rng: {}
+          ioThreadsPolicy: shared
+          resources:
+            requests:
+              memory: 2Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: rhel8-h61x7veung45orba
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: cloud-user
+              password: aa7y-e6ie-1eqd
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+kind: List
+metadata: {}

@@ -1,0 +1,97 @@
+apiVersion: v1
+items:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.resources.requests.memory",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1610612736
+          }
+        ]
+    labels:
+      app: rhel9-w5prmnhwou42cv53
+      vm.kubevirt.io/template: rhel9-highperformance-medium
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: devel
+    name: rhel9-w5prmnhwou42cv53
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: rhel9-w5prmnhwou42cv53
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel9
+          namespace: kubevirt-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    running: false
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: medium
+          vm.kubevirt.io/os: rhel9
+          vm.kubevirt.io/workload: highperformance
+        labels:
+          kubevirt.io/domain: rhel9-w5prmnhwou42cv53
+          kubevirt.io/size: medium
+      spec:
+        domain:
+          cpu:
+            cores: 1
+            dedicatedCpuPlacement: true
+            isolateEmulatorThread: true
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - dedicatedIOThread: true
+              disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            networkInterfaceMultiqueue: true
+            rng: {}
+          features:
+            smm:
+              enabled: true
+          firmware:
+            bootloader:
+              efi: {}
+          ioThreadsPolicy: shared
+          resources:
+            requests:
+              memory: 4Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: rhel9-w5prmnhwou42cv53
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: cloud-user
+              password: f7rx-hcxg-n10y
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+kind: List
+metadata: {}

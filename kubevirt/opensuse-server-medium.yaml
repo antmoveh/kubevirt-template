@@ -1,0 +1,87 @@
+apiVersion: v1
+items:
+- apiVersion: kubevirt.io/v1
+  kind: VirtualMachine
+  metadata:
+    annotations:
+      vm.kubevirt.io/validations: |
+        [
+          {
+            "name": "minimal-required-memory",
+            "path": "jsonpath::.spec.domain.resources.requests.memory",
+            "rule": "integer",
+            "message": "This VM requires more memory.",
+            "min": 1073741824
+          }
+        ]
+    labels:
+      app: opensuse-vh5hb01tcqcrd6ge
+      vm.kubevirt.io/template: opensuse-server-medium
+      vm.kubevirt.io/template.revision: "1"
+      vm.kubevirt.io/template.version: devel
+    name: opensuse-vh5hb01tcqcrd6ge
+  spec:
+    dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: opensuse-vh5hb01tcqcrd6ge
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: opensuse
+          namespace: kubevirt-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+    running: false
+    template:
+      metadata:
+        annotations:
+          vm.kubevirt.io/flavor: medium
+          vm.kubevirt.io/os: opensuse
+          vm.kubevirt.io/workload: server
+        labels:
+          kubevirt.io/domain: opensuse-vh5hb01tcqcrd6ge
+          kubevirt.io/size: medium
+      spec:
+        domain:
+          cpu:
+            cores: 1
+            sockets: 1
+            threads: 1
+          devices:
+            disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+            interfaces:
+            - masquerade: {}
+              model: virtio
+              name: default
+            networkInterfaceMultiqueue: true
+            rng: {}
+          resources:
+            requests:
+              memory: 4Gi
+        networks:
+        - name: default
+          pod: {}
+        terminationGracePeriodSeconds: 180
+        volumes:
+        - dataVolume:
+            name: opensuse-vh5hb01tcqcrd6ge
+          name: rootdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: opensuse
+              password: ddia-eav2-mce5
+              chpasswd: { expire: False }
+          name: cloudinitdisk
+kind: List
+metadata: {}
